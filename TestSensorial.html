@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software P.S. 2 - Profesional</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        /* Diseño General */
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #f8f6fb 0%, #e8e2f4 100%); color: #332a5c; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 40px 20px; box-sizing: border-box; }
+        .card { background: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(90, 75, 129, 0.08); width: 100%; max-width: 700px; margin-bottom: 20px; }
+        .header-app { text-align: center; margin-bottom: 30px; }
+        .header-app h2 { color: #332a5c; font-weight: 700; font-size: 28px; margin: 0 0 10px 0; }
+        .header-app p { color: #71698e; font-size: 14px; margin: 0; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .full-width { grid-column: 1 / -1; }
+        label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #5a4b81; }
+        input, select { width: 100%; padding: 14px 16px; background-color: #f9f8fc; border: 1px solid #dcd6eb; border-radius: 12px; box-sizing: border-box; font-size: 14px; font-family: 'Poppins', sans-serif; color: #332a5c; transition: all 0.3s ease; }
+        input:focus, select:focus { border-color: #8c7ae6; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(140, 122, 230, 0.15); outline: none; }
+        .edad-calculada { font-size: 13px; color: #8c7ae6; background: #f0ecfa; padding: 10px 15px; border-radius: 8px; margin-top: -10px; margin-bottom: 20px; font-weight: 600; display: inline-block; }
+        
+        /* Botones */
+        .btn-principal { background: linear-gradient(135deg, #6c5ce7 0%, #5a4b81 100%); color: white; border: none; padding: 16px 24px; font-size: 16px; border-radius: 30px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 20px; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.25); transition: transform 0.2s; }
+        .btn-principal:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(108, 92, 231, 0.35); }
+        .btn-secundario { background: #e8e2f4; color: #5a4b81; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
+        
+        /* Cuestionario */
+        #pantalla-cuestionario { display: none; } /* Oculto al inicio */
+        .item-pregunta { background: #fdfcff; margin-bottom: 20px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; }
+        .item-pregunta p { margin: 0 0 15px 0; font-weight: 500; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="pantalla-inicio">
+        <div class="header-app">
+            <h2>Nueva Evaluación</h2>
+            <p>Software de calificación automatizada - P.S. 2</p>
+        </div>
+
+        <form id="formInicio">
+            <div class="form-group full-width">
+                <label>Nombre completo del evaluado</label>
+                <input type="text" id="nombre" required placeholder="Ej. Juan Pérez">
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" required onchange="calcularEdadExacta()">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Evaluación</label>
+                    <input type="date" id="fechaEvaluacion" required onchange="calcularEdadExacta()">
+                </div>
+            </div>
+
+            <div class="edad-calculada" id="textoEdad">Esperando fechas...</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Sexo</label>
+                    <select id="sexo" required>
+                        <option value="" disabled selected>Seleccione...</option>
+                        <option value="Mujer">Mujer</option>
+                        <option value="Varón">Varón</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Profesional (Siglas)</label>
+                    <input type="text" id="profesional" required placeholder="Ej. OSMI">
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Selecciona el Perfil a evaluar</label>
+                <select id="tipoPerfil" required>
+                    <option value="" disabled selected>Elige el cuestionario...</option>
+                    <option value="escolar">🎒 Perfil Escolar (3 a 14 años)</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn-principal" onclick="iniciarEvaluacion()">Comenzar Cuestionario</button>
+        </form>
+    </div>
+
+    <div class="card" id="pantalla-cuestionario">
+        <button class="btn-secundario" onclick="volverInicio()">← Volver a los datos</button>
+        <div class="header-app">
+            <h2 id="titulo-cuestionario">Cuestionario</h2>
+            <p>Responda la frecuencia de las siguientes conductas.</p>
+        </div>
+        
+        <div id="contenedorCuestionario"></div>
+        
+        <button type="button" class="btn-principal" onclick="calcularYGenerarPDF()">Generar Reporte PDF</button>
+    </div>
+
+<script>
+    // --- 1. BASES DE DATOS LÓGICAS ---
+
+    // Textos para el PDF (Esqueleto)
+    const textosPerfilEscolar = {
+        busqueda: {
+            "como_los_demas": "Presenta patrones de búsqueda sensorial dentro de lo esperado para su edad. Explora y participa en actividades nuevas sin que su nivel de búsqueda interfiera significativamente en su vida diaria.",
+            "mas_que_los_demas": "Busca estímulos con más frecuencia de lo esperado. Puede distraerse fácilmente, cambiar de actividad con rapidez o mostrar conductas de búsqueda constantes.",
+            "mucho_mas_que_los_demas": "Manifiesta una búsqueda sensorial intensa y casi constante. Esto puede provocar dificultades para mantener la atención en tareas académicas, interferir en la dinámica del aula y generar conductas disruptivas."
+        }
+    };
+
+    // Baremos (Rangos de clasificación)
+    const baremosEscolar = {
+        "busqueda": {
+            "como_los_demas": { min: 0, max: 60 },
+            "mas_que_los_demas": { min: 61, max: 82 },
+            "mucho_mas_que_los_demas": { min: 83, max: 200 } // Hasta 200 para cubrir cualquier puntaje alto
+        }
+    };
+
+    // Preguntas (Muestra reducida para probar el flujo)
+    const preguntasEscolar = [
+        { id: 1, texto: "Busca todo tipo de movimiento y esto interfiere con sus rutinas diarias.", cuadrante: "busqueda" },
+        { id: 2, texto: "Toca a las personas o los objetos constantemente.", cuadrante: "busqueda" },
+        { id: 3, texto: "Le encanta generar ruidos y sonidos fuertes.", cuadrante: "busqueda" }
+    ];
+
+    // --- 2. FUNCIONES DE INTERFAZ ---
+
+    // Asignar fecha actual
+    document.getElementById('fechaEvaluacion').valueAsDate = new Date();
+
+    function calcularEdadExacta() {
+        const nacStr = document.getElementById('fechaNacimiento').value;
+        const evalStr = document.getElementById('fechaEvaluacion').value;
+        if(!nacStr || !evalStr) return;
+        
+        const nac = new Date(nacStr);
+        const eva = new Date(evalStr);
+        let anos = eva.getFullYear() - nac.getFullYear();
+        let meses = eva.getMonth() - nac.getMonth();
+        let dias = eva.getDate() - nac.getDate();
+
+        if (dias < 0) { meses--; dias += new Date(eva.getFullYear(), eva.getMonth(), 0).getDate(); }
+        if (meses < 0) { anos--; meses += 12; }
+        document.getElementById('textoEdad').innerText = `Edad exacta: ${anos} años, ${meses} meses, ${dias} días`;
+    }
+
+    function iniciarEvaluacion() {
+        const perfil = document.getElementById('tipoPerfil').value;
+        const nombre = document.getElementById('nombre').value;
+        if(!perfil || !nombre) { alert("Completa los datos principales (Nombre y Perfil)."); return; }
+        
+        // Cambiamos de pantalla
+        document.getElementById('pantalla-inicio').style.display = 'none';
+        document.getElementById('pantalla-cuestionario').style.display = 'block';
+        
+        cargarCuestionario();
+    }
+
+    function volverInicio() {
+        document.getElementById('pantalla-inicio').style.display = 'block';
+        document.getElementById('pantalla-cuestionario').style.display = 'none';
+    }
+
+    function cargarCuestionario() {
+        const contenedor = document.getElementById('contenedorCuestionario');
+        contenedor.innerHTML = ''; 
+        
+        preguntasEscolar.forEach(pregunta => {
+            const html = `
+                <div class="item-pregunta">
+                    <p>${pregunta.id}. ${pregunta.texto}</p>
+                    <select class="respuesta-evaluacion" data-cuadrante="${pregunta.cuadrante}">
+                        <option value="" disabled selected>Selecciona una frecuencia...</option>
+                        <option value="50">Siempre (Puntaje de prueba alto)</option>
+                        <option value="30">Frecuentemente (Puntaje de prueba medio)</option>
+                        <option value="10">Casi nunca (Puntaje de prueba bajo)</option>
+                    </select>
+                </div>
+            `;
+            contenedor.innerHTML += html;
+        });
+    }
+
+    // --- 3. MOTOR DE CÁLCULO Y PDF ---
+
+    function calcularYGenerarPDF() {
+        const respuestas = document.querySelectorAll('.respuesta-evaluacion');
+        let todasRespondidas = true;
+        let puntajeBusqueda = 0;
+
+        // Sumar puntos
+        respuestas.forEach(select => {
+            if (select.value === "") todasRespondidas = false;
+            else if (select.getAttribute('data-cuadrante') === 'busqueda') {
+                puntajeBusqueda += parseInt(select.value);
+            }
+        });
+
+        if (!todasRespondidas) {
+            alert("Responde todas las preguntas.");
+            return;
+        }
+
+        // Clasificar
+        let clasificacion = "como_los_demas"; // Por defecto
+        const rangosBusqueda = baremosEscolar.busqueda;
+        
+        for (let clave in rangosBusqueda) {
+            if (puntajeBusqueda >= rangosBusqueda[clave].min && puntajeBusqueda <= rangosBusqueda[clave].max) {
+                clasificacion = clave;
+            }
+        }
+
+        // Generar el PDF
+        generarReporte(puntajeBusqueda, clasificacion);
+    }
+
+    function generarReporte(puntaje, clasificacion) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const nombre = document.getElementById('nombre').value;
+        const edadTexto = document.getElementById('textoEdad').innerText.replace("Edad exacta: ", "");
+        const fecha = document.getElementById('fechaEvaluacion').value;
+        const sexo = document.getElementById('sexo').value;
+
+        // Encabezado
+        doc.setFillColor(90, 75, 129);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text("PERFIL SENSORIAL 2", 15, 20);
+        
+        doc.setFontSize(11);
+        doc.text(`Nombre: ${nombre}`, 15, 30);
+        doc.text(`Edad: ${edadTexto}`, 15, 36);
+        doc.text(`Fecha: ${fecha}`, 120, 30);
+        doc.text(`Sexo: ${sexo}`, 120, 36);
+
+        // Tabla de Resultados
+        doc.setTextColor(51, 42, 92);
+        doc.setFontSize(14);
+        doc.text("Resultados del Cuadrante", 15, 50);
+
+        const textoClasificacionAmigable = clasificacion.replace(/_/g, " ").toUpperCase();
+
+        doc.autoTable({
+            startY: 55,
+            head: [['Cuadrante', 'Puntaje Directo', 'Clasificación']],
+            body: [["Búsqueda / Buscador", puntaje, textoClasificacionAmigable]],
+            theme: 'striped',
+            headStyles: { fillColor: [140, 122, 230] }
+        });
+
+        // Párrafo Interpretativo
+        let alturaActual = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.text("Interpretación Clínica", 15, alturaActual);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(80, 80, 80);
+        
+        let textoParrafo = textosPerfilEscolar.busqueda[clasificacion];
+        let textoAjustado = doc.splitTextToSize(`Búsqueda: ${textoParrafo}`, 180);
+        
+        doc.text(textoAjustado, 15, alturaActual + 10);
+
+        doc.save(`Reporte_PS2_${nombre.replace(/ /g, "_")}.pdf`);
+    }
+</script>
+
+</body>
+</html>
