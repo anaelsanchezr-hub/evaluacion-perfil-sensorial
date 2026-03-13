@@ -105,9 +105,9 @@
     </div>
 
 <script>
-    // --- 1. BASES DE DATOS LÓGICAS ---
+    // --- 1. BASES DE DATOS LÓGICAS (PERFIL ESCOLAR COMO EJEMPLO) ---
 
-    // Textos para el PDF (Esqueleto)
+    // Textos para el PDF
     const textosPerfilEscolar = {
         busqueda: {
             "como_los_demas": "Presenta patrones de búsqueda sensorial dentro de lo esperado para su edad. Explora y participa en actividades nuevas sin que su nivel de búsqueda interfiera significativamente en su vida diaria.",
@@ -121,11 +121,11 @@
         "busqueda": {
             "como_los_demas": { min: 0, max: 60 },
             "mas_que_los_demas": { min: 61, max: 82 },
-            "mucho_mas_que_los_demas": { min: 83, max: 200 } // Hasta 200 para cubrir cualquier puntaje alto
+            "mucho_mas_que_los_demas": { min: 83, max: 200 } 
         }
     };
 
-    // Preguntas (Muestra reducida para probar el flujo)
+    // Preguntas
     const preguntasEscolar = [
         { id: 1, texto: "Busca todo tipo de movimiento y esto interfiere con sus rutinas diarias.", cuadrante: "busqueda" },
         { id: 2, texto: "Toca a las personas o los objetos constantemente.", cuadrante: "busqueda" },
@@ -134,7 +134,6 @@
 
     // --- 2. FUNCIONES DE INTERFAZ ---
 
-    // Asignar fecha actual
     document.getElementById('fechaEvaluacion').valueAsDate = new Date();
 
     function calcularEdadExacta() {
@@ -154,49 +153,34 @@
     }
 
     function iniciarEvaluacion() {
-    const perfil = document.getElementById('tipoPerfil').value;
-    const nombre = document.getElementById('nombre').value;
-    
-    if(!perfil || !nombre) { 
-        alert("Completa los datos principales (Nombre y Perfil)."); 
-        return; 
+        const perfil = document.getElementById('tipoPerfil').value;
+        const nombre = document.getElementById('nombre').value;
+        if(!perfil || !nombre) { alert("Por favor, completa el nombre y selecciona un perfil."); return; }
+        
+        // Caminos según el perfil seleccionado
+        if (perfil === 'escolar') {
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            document.getElementById('pantalla-cuestionario').style.display = 'block';
+            document.getElementById('titulo-cuestionario').innerText = "Cuestionario Escolar";
+            cargarCuestionarioEscolar();
+        } 
+        else if (perfil === 'bebe') {
+            alert("Has seleccionado el Perfil Bebé. (Pronto agregaremos sus preguntas y lógica).");
+        }
+        else if (perfil === 'infante') {
+            alert("Has seleccionado el Perfil Infante. (Pronto agregaremos sus preguntas y lógica).");
+        }
+        else if (perfil === 'adulto') {
+            alert("Has seleccionado el Perfil Adulto. (Pronto agregaremos sus preguntas y lógica).");
+        }
     }
-    
-    // Cambiamos de pantalla
-    document.getElementById('pantalla-inicio').style.display = 'none';
-    document.getElementById('pantalla-cuestionario').style.display = 'block';
-    
-    // DECISIÓN LÓGICA: ¿Qué cuestionario cargamos?
-    if (perfil === 'escolar') {
-        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Escolar";
-        cargarCuestionarioEscolar(); // Llamamos a la función que ya hicimos
-    } 
-    else if (perfil === 'bebe') {
-        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Bebé";
-        alert("En el futuro, aquí cargaremos las preguntas del Perfil Bebé.");
-        // cargarCuestionarioBebe(); 
-    }
-    else if (perfil === 'infante') {
-        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Infante";
-        alert("En el futuro, aquí cargaremos las preguntas del Perfil Infante.");
-        // cargarCuestionarioInfante();
-    }
-    else if (perfil === 'adulto') {
-        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Adulto";
-        alert("En el futuro, aquí cargaremos las preguntas del Perfil Adulto.");
-        // cargarCuestionarioAdulto();
-    }
-}
-
-// Nota: Recuerda cambiar el nombre de tu función actual "cargarCuestionario()" 
-// a "cargarCuestionarioEscolar()" para que coincida.
 
     function volverInicio() {
         document.getElementById('pantalla-inicio').style.display = 'block';
         document.getElementById('pantalla-cuestionario').style.display = 'none';
     }
 
-    function cargarCuestionario() {
+    function cargarCuestionarioEscolar() {
         const contenedor = document.getElementById('contenedorCuestionario');
         contenedor.innerHTML = ''; 
         
@@ -223,7 +207,6 @@
         let todasRespondidas = true;
         let puntajeBusqueda = 0;
 
-        // Sumar puntos
         respuestas.forEach(select => {
             if (select.value === "") todasRespondidas = false;
             else if (select.getAttribute('data-cuadrante') === 'busqueda') {
@@ -232,12 +215,11 @@
         });
 
         if (!todasRespondidas) {
-            alert("Responde todas las preguntas.");
+            alert("Responde todas las preguntas antes de generar el reporte.");
             return;
         }
 
-        // Clasificar
-        let clasificacion = "como_los_demas"; // Por defecto
+        let clasificacion = "como_los_demas"; 
         const rangosBusqueda = baremosEscolar.busqueda;
         
         for (let clave in rangosBusqueda) {
@@ -246,7 +228,6 @@
             }
         }
 
-        // Generar el PDF
         generarReporte(puntajeBusqueda, clasificacion);
     }
 
