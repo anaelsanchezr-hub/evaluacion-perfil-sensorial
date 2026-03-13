@@ -80,8 +80,11 @@
             <div class="form-group full-width">
                 <label>Selecciona el Perfil a evaluar</label>
                 <select id="tipoPerfil" required>
-                    <option value="" disabled selected>Elige el cuestionario...</option>
+                    <option value="" disabled selected>Elige el cuestionario correspondiente...</option>
+                    <option value="bebe">👶 Perfil Bebé (0 a 6 meses)</option>
+                    <option value="infante">🍼 Perfil Infante (7 a 35 meses)</option>
                     <option value="escolar">🎒 Perfil Escolar (3 a 14 años)</option>
+                    <option value="adulto">🧑 Perfil Adulto (15+ años)</option>
                 </select>
             </div>
 
@@ -151,16 +154,42 @@
     }
 
     function iniciarEvaluacion() {
-        const perfil = document.getElementById('tipoPerfil').value;
-        const nombre = document.getElementById('nombre').value;
-        if(!perfil || !nombre) { alert("Completa los datos principales (Nombre y Perfil)."); return; }
-        
-        // Cambiamos de pantalla
-        document.getElementById('pantalla-inicio').style.display = 'none';
-        document.getElementById('pantalla-cuestionario').style.display = 'block';
-        
-        cargarCuestionario();
+    const perfil = document.getElementById('tipoPerfil').value;
+    const nombre = document.getElementById('nombre').value;
+    
+    if(!perfil || !nombre) { 
+        alert("Completa los datos principales (Nombre y Perfil)."); 
+        return; 
     }
+    
+    // Cambiamos de pantalla
+    document.getElementById('pantalla-inicio').style.display = 'none';
+    document.getElementById('pantalla-cuestionario').style.display = 'block';
+    
+    // DECISIÓN LÓGICA: ¿Qué cuestionario cargamos?
+    if (perfil === 'escolar') {
+        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Escolar";
+        cargarCuestionarioEscolar(); // Llamamos a la función que ya hicimos
+    } 
+    else if (perfil === 'bebe') {
+        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Bebé";
+        alert("En el futuro, aquí cargaremos las preguntas del Perfil Bebé.");
+        // cargarCuestionarioBebe(); 
+    }
+    else if (perfil === 'infante') {
+        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Infante";
+        alert("En el futuro, aquí cargaremos las preguntas del Perfil Infante.");
+        // cargarCuestionarioInfante();
+    }
+    else if (perfil === 'adulto') {
+        document.getElementById('titulo-cuestionario').innerText = "Cuestionario Adulto";
+        alert("En el futuro, aquí cargaremos las preguntas del Perfil Adulto.");
+        // cargarCuestionarioAdulto();
+    }
+}
+
+// Nota: Recuerda cambiar el nombre de tu función actual "cargarCuestionario()" 
+// a "cargarCuestionarioEscolar()" para que coincida.
 
     function volverInicio() {
         document.getElementById('pantalla-inicio').style.display = 'block';
