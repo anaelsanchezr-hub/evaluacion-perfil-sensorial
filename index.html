@@ -122,10 +122,16 @@
 
 <script>
     // ==========================================
+    // 0. VARIABLES GLOBALES INTELIGENTES
+    // ==========================================
+    let edadGlobalAnos = 0; // Guardará la edad exacta del evaluado para elegir el baremo
+    let baremos_Activos = null; 
+    let titulo_PDF_Activo = "";
+
+    // ==========================================
     // 1. BASES DE DATOS DE PREGUNTAS
     // ==========================================
 
-    // --- PREGUNTAS: HOME FORM (NIÑOS 5-12 AÑOS) ---
     const preguntas_Child_Home = [
         { id: 1, texto: "Se fastidia con la luz brillante.", categoria: "vis", inverso: false },
         { id: 2, texto: "Tiene problemas para encontrar un objeto en medio de otros.", categoria: "vis", inverso: false },
@@ -209,7 +215,6 @@
         { id: 80, texto: "Coopera con miembros de la familia mientras hacen recados.", categoria: "soc", inverso: true }
     ];
 
-    // --- PREGUNTAS: HOME FORM (PREESCOLAR 2-5 AÑOS) ---
     const preguntas_Preschool_Home = [
         { id: 1, texto: "Entrecierra los ojos o se los cubre, o se queja de las luces que brillan mucho o de la luz del sol.", categoria: "vis", inverso: false },
         { id: 2, texto: "Tiene problemas para encontrar un objeto en medio de otros.", categoria: "vis", inverso: false },
@@ -297,7 +302,6 @@
     // 2. BAREMOS Y RANGOS EXACTOS
     // ==========================================
 
-    // Baremos matemáticos exactos (Niños 5-12 Home Form) extraídos del PDF
     const baremos_Child_Home = {
         "vis": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 22 }, "Dificultades Severas": { min: 23, max: 40 } },
         "hea": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 24 }, "Dificultades Severas": { min: 25, max: 40 } },
@@ -310,9 +314,29 @@
         "st":  { "Típico": { min: 60, max: 90 }, "Dificultades Moderadas": { min: 91, max: 125 }, "Dificultades Severas": { min: 126, max: 240 } }
     };
 
-    // Baremos temporales para Preescolar (Misma lógica, actualizaremos los números luego)
-    let baremos_Activos = baremos_Child_Home; 
-    let titulo_PDF_Activo = "";
+    const baremos_Preschool_Home_2_4 = {
+        "vis": { "Típico": { min: 10, max: 19 }, "Dificultades Moderadas": { min: 20, max: 27 }, "Dificultades Severas": { min: 28, max: 40 } },
+        "hea": { "Típico": { min: 10, max: 19 }, "Dificultades Moderadas": { min: 20, max: 29 }, "Dificultades Severas": { min: 30, max: 40 } },
+        "tou": { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 25 }, "Dificultades Severas": { min: 26, max: 40 } },
+        "ts":  { "Típico": { min: 10, max: 16 }, "Dificultades Moderadas": { min: 17, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
+        "bod": { "Típico": { min: 10, max: 19 }, "Dificultades Moderadas": { min: 20, max: 28 }, "Dificultades Severas": { min: 29, max: 40 } },
+        "bal": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 20 }, "Dificultades Severas": { min: 21, max: 40 } },
+        "pln": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 27 }, "Dificultades Severas": { min: 28, max: 40 } },
+        "soc": { "Típico": { min: 10, max: 24 }, "Dificultades Moderadas": { min: 25, max: 31 }, "Dificultades Severas": { min: 32, max: 40 } },
+        "st":  { "Típico": { min: 60, max: 105 }, "Dificultades Moderadas": { min: 106, max: 142 }, "Dificultades Severas": { min: 143, max: 240 } }
+    };
+
+    const baremos_Preschool_Home_5 = {
+        "vis": { "Típico": { min: 10, max: 19 }, "Dificultades Moderadas": { min: 20, max: 35 }, "Dificultades Severas": { min: 36, max: 40 } },
+        "hea": { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 30 }, "Dificultades Severas": { min: 31, max: 40 } },
+        "tou": { "Típico": { min: 10, max: 16 }, "Dificultades Moderadas": { min: 17, max: 30 }, "Dificultades Severas": { min: 31, max: 40 } },
+        "ts":  { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 30 }, "Dificultades Severas": { min: 31, max: 40 } },
+        "bod": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 35 }, "Dificultades Severas": { min: 36, max: 40 } },
+        "bal": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 26 }, "Dificultades Severas": { min: 27, max: 40 } },
+        "pln": { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 28 }, "Dificultades Severas": { min: 29, max: 40 } },
+        "soc": { "Típico": { min: 10, max: 22 }, "Dificultades Moderadas": { min: 23, max: 34 }, "Dificultades Severas": { min: 35, max: 40 } },
+        "st":  { "Típico": { min: 60, max: 105 }, "Dificultades Moderadas": { min: 106, max: 180 }, "Dificultades Severas": { min: 181, max: 240 } }
+    };
 
     // ==========================================
     // 3. LÓGICA DE INTERFAZ
@@ -333,26 +357,29 @@
 
         if (dias < 0) { meses--; dias += new Date(eva.getFullYear(), eva.getMonth(), 0).getDate(); }
         if (meses < 0) { anos--; meses += 12; }
+        
+        // Guardamos los años en la variable global para elegir el baremo correcto después
+        edadGlobalAnos = anos;
         document.getElementById('textoEdad').innerText = `Edad exacta: ${anos} años, ${meses} meses, ${dias} días`;
     }
 
     function iniciarEvaluacion() {
         const perfilSeleccionado = document.getElementById('tipoPerfil').value;
         const nombre = document.getElementById('nombre').value;
+        
         if(!perfilSeleccionado || !nombre) { alert("Por favor, completa el nombre y selecciona un perfil."); return; }
+        if(edadGlobalAnos === 0 && document.getElementById('fechaNacimiento').value === "") { alert("Por favor, ingresa la fecha de nacimiento para calcular la edad."); return; }
         
         document.getElementById('pantalla-inicio').style.display = 'none';
         document.getElementById('pantalla-cuestionario').style.display = 'block';
 
         if (perfilSeleccionado === 'spm_child_home') {
             document.getElementById('titulo-cuestionario').innerText = "SPM-2: Home Form (Niños 5-12)";
-            baremos_Activos = baremos_Child_Home; // Asignamos los baremos exactos
             titulo_PDF_Activo = "REPORTE SPM-2 (HOME FORM 5-12 AÑOS)";
             cargarCuestionario(preguntas_Child_Home);
         } else if (perfilSeleccionado === 'spm_preschool_home') {
             document.getElementById('titulo-cuestionario').innerText = "SPM-2: Home Form (Preescolar 2-5)";
-            baremos_Activos = baremos_Child_Home; // NOTA: temporalmente usa los de niño hasta que hagamos el prompt 4
-            titulo_PDF_Activo = "REPORTE SPM-2 (HOME FORM 2-5 AÑOS)";
+            titulo_PDF_Activo = `REPORTE SPM-2 (HOME FORM PREESCOLAR - TABLA ${edadGlobalAnos <= 4 ? "2-4 AÑOS" : "5 AÑOS"})`;
             cargarCuestionario(preguntas_Preschool_Home);
         }
     }
@@ -390,10 +417,12 @@
     // ==========================================
 
     function calcularYGenerarPDF_SPM() {
+        const perfilSeleccionado = document.getElementById('tipoPerfil').value;
         const respuestas = document.querySelectorAll('.respuesta-evaluacion');
         let todasRespondidas = true;
         let puntajes = { "vis": 0, "hea": 0, "tou": 0, "ts": 0, "bod": 0, "bal": 0, "pln": 0, "soc": 0 }; 
 
+        // 1. Validar respuestas y sumar puntajes directos
         respuestas.forEach(select => {
             if (select.value === "") {
                 todasRespondidas = false;
@@ -413,11 +442,24 @@
         }
 
         puntajes["st"] = puntajes.vis + puntajes.hea + puntajes.tou + puntajes.ts + puntajes.bod + puntajes.bal;
+
+        // 2. Asignar el Baremo Correcto Inteligente
+        if (perfilSeleccionado === 'spm_child_home') {
+            baremos_Activos = baremos_Child_Home;
+        } else if (perfilSeleccionado === 'spm_preschool_home') {
+            // El motor detecta la edad ingresada y elige la tabla matemática correcta
+            if (edadGlobalAnos <= 4) {
+                baremos_Activos = baremos_Preschool_Home_2_4;
+            } else {
+                baremos_Activos = baremos_Preschool_Home_5;
+            }
+        }
+
         generarReporteSPM(puntajes);
     }
 
     function obtenerClasificacionSPM(categoria, puntaje) {
-        const rangos = baremos_Activos[categoria]; // Usa los baremos del perfil seleccionado
+        const rangos = baremos_Activos[categoria]; 
         for (let clasificacion in rangos) {
             if (puntaje >= rangos[clasificacion].min && puntaje <= rangos[clasificacion].max) {
                 return clasificacion;
@@ -438,7 +480,7 @@
         doc.setFillColor(34, 166, 179); 
         doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
+        doc.setFontSize(16); // Letra un poco más pequeña para que quepa todo el título
         doc.text(titulo_PDF_Activo, 15, 20);
         
         doc.setFontSize(11);
