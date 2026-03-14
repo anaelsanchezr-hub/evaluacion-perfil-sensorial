@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software Evaluaciones Sensoriales</title>
+    <title>Software Evaluaciones Sensoriales SPM-2</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -38,7 +38,7 @@
     <div class="card" id="pantalla-inicio">
         <div class="header-app">
             <h2>Nueva Evaluación</h2>
-            <p>Software de calificación automatizada - Múltiples Perfiles</p>
+            <p>Plataforma de Calificación Automatizada - SPM-2</p>
         </div>
 
         <form id="formInicio">
@@ -76,11 +76,31 @@
             </div>
 
             <div class="form-group full-width">
-                <label>Selecciona el Perfil a evaluar</label>
+                <label>Selecciona el Formulario SPM-2 a evaluar</label>
                 <select id="tipoPerfil" required>
                     <option value="" disabled selected>Elige el cuestionario correspondiente...</option>
-                    <option value="spm_hogar">🏠 SPM - Formulario Hogar</option>
-                    <option value="escolar">🎒 Perfil Sensorial 2 - Escolar (Próximamente)</option>
+                    <optgroup label="Bebés e Infantes (4 - 30 meses)">
+                        <option value="spm_infant" disabled>👶 Infant Form (4 a 9 meses) - Próximamente</option>
+                        <option value="spm_toddler" disabled>🍼 Toddler Form (10 a 30 meses) - Próximamente</option>
+                        <option value="spm_caregiver" disabled>👥 Caregiver Self-Report Form - Próximamente</option>
+                    </optgroup>
+                    <optgroup label="Preescolares (2 - 5 años)">
+                        <option value="spm_preschool_home">🏠 Home Form (Preescolar)</option>
+                        <option value="spm_preschool_school" disabled>🎒 School Form (Preescolar) - Próximamente</option>
+                    </optgroup>
+                    <optgroup label="Niños (5 - 12 años)">
+                        <option value="spm_child_home">🏠 Home Form (Niños 5-12)</option>
+                        <option value="spm_child_school" disabled>🎒 School Form (Niños 5-12) - Próximamente</option>
+                    </optgroup>
+                    <optgroup label="Adolescentes (12 - 21 años)">
+                        <option value="spm_adol_home" disabled>🏠 Home Form (Adolescente) - Próximamente</option>
+                        <option value="spm_adol_school" disabled>🎒 School Form (Adolescente) - Próximamente</option>
+                        <option value="spm_adol_self" disabled>📝 Self-Report Form (Adolescente) - Próximamente</option>
+                    </optgroup>
+                    <optgroup label="Adultos (21 - 87 años)">
+                        <option value="spm_adult_self" disabled>📝 Self-Report Form (Adultos) - Próximamente</option>
+                        <option value="spm_adult_rater" disabled>👥 Rater Report Form (Adultos) - Próximamente</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -92,33 +112,21 @@
         <button class="btn-secundario" onclick="volverInicio()">← Volver a los datos</button>
         <div class="header-app">
             <h2 id="titulo-cuestionario">Cuestionario</h2>
-            <p>Responda la frecuencia de las siguientes conductas.</p>
+            <p>Responda la frecuencia de las siguientes conductas (1 = Nunca, 4 = Siempre).</p>
         </div>
         
         <div id="contenedorCuestionario"></div>
         
-        <button type="button" class="btn-principal" onclick="calcularYGenerarPDF_SPM()">Generar Reporte PDF (SPM)</button>
+        <button type="button" class="btn-principal" onclick="calcularYGenerarPDF_SPM()">Generar Reporte PDF</button>
     </div>
 
 <script>
-    // --- 1. BASE DE DATOS LÓGICA SPM ---
+    // ==========================================
+    // 1. BASES DE DATOS DE PREGUNTAS
+    // ==========================================
 
-    // Baremos de ejemplo para el SPM (Categorías: Típico, Problema, Disfunción)
-    const baremosSPM = {
-        "vis": { "Típico": { min: 10, max: 19 }, "Dificultades Moderadas": { min: 20, max: 24 }, "Dificultades Severas": { min: 25, max: 40 } },
-        "hea": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } }, 
-        "tou": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
-        "ts":  { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
-        "bod": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
-        "bal": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 20 }, "Dificultades Severas": { min: 21, max: 40 } },
-        "pln": { "Típico": { min: 10, max: 24 }, "Dificultades Moderadas": { min: 25, max: 29 }, "Dificultades Severas": { min: 30, max: 40 } },
-        "soc": { "Típico": { min: 10, max: 18 }, "Dificultades Moderadas": { min: 19, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } }, 
-        "st":  { "Típico": { min: 60, max: 105 }, "Dificultades Moderadas": { min: 106, max: 125 }, "Dificultades Severas": { min: 126, max: 240 } }
-    };
-
-    // --- BASE DE DATOS COMPLETA SPM (HOGAR 5-12 AÑOS) ---
-    const preguntasSPM = [
-        // --- VISIÓN (vis) ---
+    // --- PREGUNTAS: HOME FORM (NIÑOS 5-12 AÑOS) ---
+    const preguntas_Child_Home = [
         { id: 1, texto: "Se fastidia con la luz brillante.", categoria: "vis", inverso: false },
         { id: 2, texto: "Tiene problemas para encontrar un objeto en medio de otros.", categoria: "vis", inverso: false },
         { id: 3, texto: "Se angustia en lugares donde el ambiente visual es poco común como en habitaciones de colorido fuerte o habitaciones con poca luz.", categoria: "vis", inverso: false },
@@ -129,8 +137,6 @@
         { id: 8, texto: "Se abruma o se distrae en las tiendas por todas las cosas que se ven en las vitrinas.", categoria: "vis", inverso: false },
         { id: 9, texto: "Se distrae con objetos o gente que están visibles.", categoria: "vis", inverso: false },
         { id: 10, texto: "Busca áreas que estén oscuras.", categoria: "vis", inverso: false },
-
-        // --- OÍDO (hea - Hearing) ---
         { id: 11, texto: "Se fastidia con los sonidos caseros comunes como el de una aspiradora.", categoria: "hea", inverso: false },
         { id: 12, texto: "Responde a los ruidos fuertes escapándose, llorando, o poniéndose las manos sobre los oídos.", categoria: "hea", inverso: false },
         { id: 13, texto: "No nota los sonidos que otros notan.", categoria: "hea", inverso: false },
@@ -141,8 +147,6 @@
         { id: 18, texto: "Se angustia cuando hay sonidos agudos como silbatos o aparatos para hacer bulla en las fiestas.", categoria: "hea", inverso: false },
         { id: 19, texto: "Se sobresalta fácilmente cuando hay ruidos fuertes o inesperados.", categoria: "hea", inverso: false },
         { id: 20, texto: "Evita los lugares donde hay música o ruido fuerte.", categoria: "hea", inverso: false },
-
-        // --- TACTO (tou - Touch) ---
         { id: 21, texto: "Se aparta cuando lo/la tocan levemente o inesperadamente.", categoria: "tou", inverso: false },
         { id: 22, texto: "Se angustia con la sensación de la ropa nueva.", categoria: "tou", inverso: false },
         { id: 23, texto: "Se angustia cuando le cortan las uñas de las manos o de los pies.", categoria: "tou", inverso: false },
@@ -153,8 +157,6 @@
         { id: 28, texto: "Tiene dificultad para encontrar cosas en un bolsillo, una bolsa, o una mochila sin mirar.", categoria: "tou", inverso: false },
         { id: 29, texto: "No se limpia la saliva o la comida de la cara.", categoria: "tou", inverso: false },
         { id: 30, texto: "Se queja de que las comidas están 'demasiado calientes' o 'demasiado frías'.", categoria: "tou", inverso: false },
-
-        // --- GUSTO Y OLFATO (ts - Taste and Smell) ---
         { id: 31, texto: "Hace arcadas o vomita a causa de ciertos olores.", categoria: "ts", inverso: false },
         { id: 32, texto: "Se fastidia con olores que no les molestan a los demás.", categoria: "ts", inverso: false },
         { id: 33, texto: "No nota los olores fuertes o raros.", categoria: "ts", inverso: false },
@@ -165,8 +167,6 @@
         { id: 38, texto: "Evita probar comidas nuevas.", categoria: "ts", inverso: false },
         { id: 39, texto: "Evita baños públicos debido a los olores.", categoria: "ts", inverso: false },
         { id: 40, texto: "No distingue sabores ni expresa preferencias entre ellos.", categoria: "ts", inverso: false },
-
-        // --- CONCIENCIA DEL CUERPO (bod - Body Awareness) ---
         { id: 41, texto: "Busca actividades que consistan en empujar, jalar, o arrastrar.", categoria: "bod", inverso: false },
         { id: 42, texto: "Agarra objetos, como un lápiz o una cuchara, de una manera demasiado suelta o demasiado fuerte para poder usarlos fácilmente.", categoria: "bod", inverso: false },
         { id: 43, texto: "Usa demasiada fuerza para ciertas cosas, por ejemplo tira las puertas o presiona el teclado muy fuerte.", categoria: "bod", inverso: false },
@@ -177,8 +177,6 @@
         { id: 48, texto: "Se golpea la cabeza a propósito contra algún objeto o contra la gente.", categoria: "bod", inverso: false },
         { id: 49, texto: "Derrama o vuelca las cosas.", categoria: "bod", inverso: false },
         { id: 50, texto: "Tira la pelota con mucha o con muy poca fuerza.", categoria: "bod", inverso: false },
-
-        // --- EQUILIBRIO Y MOVIMIENTO (bal - Balance and Motion) ---
         { id: 51, texto: "Le tiene miedo a ciertos movimientos como el de columpiarse o deslizarse en el tobogán.", categoria: "bal", inverso: false },
         { id: 52, texto: "No mantiene bien el equilibrio.", categoria: "bal", inverso: false },
         { id: 53, texto: "Evita caminar sobre superficies desiguales que requieran equilibrio como la tierra o el pasto.", categoria: "bal", inverso: false },
@@ -189,8 +187,6 @@
         { id: 58, texto: "Se mece, se balancea, o se retuerce al estar sentado/a.", categoria: "bal", inverso: false },
         { id: 59, texto: "Busca oportunidades para estar de cabeza.", categoria: "bal", inverso: false },
         { id: 60, texto: "Tiene dificultad en mirar algo mientras su cabeza está en movimiento como al correr para agarrar una pelota.", categoria: "bal", inverso: false },
-
-        // --- PLANIFICACIÓN E IDEAS (pln - Planning and Ideas) ---
         { id: 61, texto: "Tiene dificultad para planear como cargar varias cosas al mismo tiempo.", categoria: "pln", inverso: false },
         { id: 62, texto: "Tiene dificultad para generar nuevas ideas durante el juego.", categoria: "pln", inverso: false },
         { id: 63, texto: "No desempeña la secuencia lógica de acciones necesarias en su rutina diaria como al vestirse o poner la mesa.", categoria: "pln", inverso: false },
@@ -201,8 +197,6 @@
         { id: 68, texto: "Necesita más práctica que los demás para adquirir una habilidad nueva.", categoria: "pln", inverso: false },
         { id: 69, texto: "Toma demasiado tiempo para completar tareas rutinarias.", categoria: "pln", inverso: false },
         { id: 70, texto: "Tiene dificultad para generar ideas de que construir como cuando juega con bloques o con materiales de artesanía.", categoria: "pln", inverso: false },
-
-        // --- PARTICIPACIÓN SOCIAL (soc - Social Participation) --- ¡ATENCIÓN: PUNTAJE INVERSO!
         { id: 71, texto: "Colabora con sus amigos sin mucha discusión cuando juega con ellos.", categoria: "soc", inverso: true },
         { id: 72, texto: "Interactúa de manera apropiada con padres y otros adultos.", categoria: "soc", inverso: true },
         { id: 73, texto: "Comparte las cosas cuando se lo piden.", categoria: "soc", inverso: true },
@@ -215,7 +209,115 @@
         { id: 80, texto: "Coopera con miembros de la familia mientras hacen recados.", categoria: "soc", inverso: true }
     ];
 
-    // --- 2. FUNCIONES DE INTERFAZ ---
+    // --- PREGUNTAS: HOME FORM (PREESCOLAR 2-5 AÑOS) ---
+    const preguntas_Preschool_Home = [
+        { id: 1, texto: "Entrecierra los ojos o se los cubre, o se queja de las luces que brillan mucho o de la luz del sol.", categoria: "vis", inverso: false },
+        { id: 2, texto: "Tiene problemas para encontrar un objeto en medio de otros.", categoria: "vis", inverso: false },
+        { id: 3, texto: "Mira fijamente a las luces o a los objetos que giran o brillan.", categoria: "vis", inverso: false },
+        { id: 4, texto: "Mira fijamente a la gente o a los objetos.", categoria: "vis", inverso: false },
+        { id: 5, texto: "Se tropieza con las cosas o con la gente como si no estuvieran ahí.", categoria: "vis", inverso: false },
+        { id: 6, texto: "Prende y apaga la luz repetidamente.", categoria: "vis", inverso: false },
+        { id: 7, texto: "Mira a objetos con el rabillo del ojo.", categoria: "vis", inverso: false },
+        { id: 8, texto: "Se distrae con objetos o gente que están visibles.", categoria: "vis", inverso: false },
+        { id: 9, texto: "Se fastidia en ambientes que tengan mucho que ver, como las habitaciones o tiendas llenas de cosas.", categoria: "vis", inverso: false },
+        { id: 10, texto: "Se distrae mirando a las cosas cuando está caminando.", categoria: "vis", inverso: false },
+        { id: 11, texto: "Se fastidia con los sonidos caseros comunes como el de una aspiradora.", categoria: "hea", inverso: false },
+        { id: 12, texto: "Responde a los ruidos fuertes escapándose, llorando, o poniéndose las manos sobre los oídos.", categoria: "hea", inverso: false },
+        { id: 13, texto: "Se distrae o se fastidia con ruidos en el ambiente que otros ignoran como una máquina de cortar el césped o el ruido del aire acondicionado.", categoria: "hea", inverso: false },
+        { id: 14, texto: "Gusta hacer ciertos sonidos repetidamente como tararear o jalar la cadena de la taza del baño.", categoria: "hea", inverso: false },
+        { id: 15, texto: "Se angustia cuando hay sonidos agudos como silbatos o aparatos para hacer bulla en las fiestas.", categoria: "hea", inverso: false },
+        { id: 16, texto: "Se angustia en sitios ruidosos como fiestas o habitaciones llenas de gente.", categoria: "hea", inverso: false },
+        { id: 17, texto: "Se sobresalta fácilmente cuando hay sonidos fuertes o inesperados.", categoria: "hea", inverso: false },
+        { id: 18, texto: "No responde cuando llaman su nombre.", categoria: "hea", inverso: false },
+        { id: 19, texto: "Tiene dificultad para seguir instrucciones verbales.", categoria: "hea", inverso: false },
+        { id: 20, texto: "Tiene dificultad para determinar de donde provienen los sonidos o las voces.", categoria: "hea", inverso: false },
+        { id: 21, texto: "Se aparta cuando lo/la tocan levemente o inesperadamente.", categoria: "tou", inverso: false },
+        { id: 22, texto: "Se pone angustiado/a cuando alguien le lava, le limpia, o le toca la cara.", categoria: "tou", inverso: false },
+        { id: 23, texto: "Se angustia cuando le cortan o le escobillan el cabello.", categoria: "tou", inverso: false },
+        { id: 24, texto: "Parece no darse cuenta de la necesidad de usar el baño.", categoria: "tou", inverso: false },
+        { id: 25, texto: "Disfruta de sensaciones que a otros les causarían dolor como el tirarse contra las paredes.", categoria: "tou", inverso: false },
+        { id: 26, texto: "Frota objetos repetidamente con las manos o las puntas de los dedos.", categoria: "tou", inverso: false },
+        { id: 27, texto: "Hace arcadas o vomita en reacción a comidas de ciertas texturas.", categoria: "tou", inverso: false },
+        { id: 28, texto: "No se limpia la saliva o la comida de la cara.", categoria: "tou", inverso: false },
+        { id: 29, texto: "Gusta estar tendido/a bajo cosas pesadas como frazadas, almohadas, o cojines de sillón.", categoria: "tou", inverso: false },
+        { id: 30, texto: "Rehúsa comidas con mezclas de texturas como el yogurt con fruta.", categoria: "tou", inverso: false },
+        { id: 31, texto: "Rehúsa probar comidas o refrigerios nuevos.", categoria: "ts", inverso: false },
+        { id: 32, texto: "No distingue sabores ni expresa preferencias entre ellos.", categoria: "ts", inverso: false },
+        { id: 33, texto: "Insiste en comer solo ciertas comidas o ciertas marcas de alimentos.", categoria: "ts", inverso: false },
+        { id: 34, texto: "Se angustia debido a sabores de comidas que a otros niños no les molestan.", categoria: "ts", inverso: false },
+        { id: 35, texto: "Huele los objetos nuevos o las cosas nuevas antes de usarlos.", categoria: "ts", inverso: false },
+        { id: 36, texto: "Nota fragancias u olores que otros no notan.", categoria: "ts", inverso: false },
+        { id: 37, texto: "Olfatea o huele a la gente.", categoria: "ts", inverso: false },
+        { id: 38, texto: "Hace arcadas o vomita a causa de ciertos olores.", categoria: "ts", inverso: false },
+        { id: 39, texto: "Busca ciertos olores o fragancias.", categoria: "ts", inverso: false },
+        { id: 40, texto: "Evita baños públicos debido a los olores.", categoria: "ts", inverso: false },
+        { id: 41, texto: "Busca actividades que consistan en empujar, jalar, o arrastrar.", categoria: "bod", inverso: false },
+        { id: 42, texto: "Tira las puertas al cerrarlas o las empuja con fuerza excesiva al abrirlas.", categoria: "bod", inverso: false },
+        { id: 43, texto: "Salta de sitios en alto impactando sus pies con mucha fuerza.", categoria: "bod", inverso: false },
+        { id: 44, texto: "Acaricia a los animales con demasiada fuerza.", categoria: "bod", inverso: false },
+        { id: 45, texto: "Juega con sus compañeros/as de una manera demasiado brusca.", categoria: "bod", inverso: false },
+        { id: 46, texto: "Muerde los juguetes, la ropa, u otros objetos repetidamente.", categoria: "bod", inverso: false },
+        { id: 47, texto: "Tira la pelota con mucha o con muy poca fuerza.", categoria: "bod", inverso: false },
+        { id: 48, texto: "Pone demasiada comida en su boca.", categoria: "bod", inverso: false },
+        { id: 49, texto: "Derrama o vuelca cosas en la mesa.", categoria: "bod", inverso: false },
+        { id: 50, texto: "Rompe juguetes al manejarlos con demasiada fuerza.", categoria: "bod", inverso: false },
+        { id: 51, texto: "Le tiene miedo a ciertos movimientos como el de columpiarse o deslizarse en el tobogán.", categoria: "bal", inverso: false },
+        { id: 52, texto: "Evita caminar sobre superficies desiguales que requieran equilibrio como la tierra o el pasto.", categoria: "bal", inverso: false },
+        { id: 53, texto: "Se cae de la silla cuando cambia de posición.", categoria: "bal", inverso: false },
+        { id: 54, texto: "No se sujeta cuando se está cayendo.", categoria: "bal", inverso: false },
+        { id: 55, texto: "Gira o da vueltas excesivamente en los equipos del campo de recreo.", categoria: "bal", inverso: false },
+        { id: 56, texto: "Muestra poca coordinación en el uso de los dos lados de su cuerpo como hay que hacer para saltar y caer sobre los dos pies al mismo tiempo.", categoria: "bal", inverso: false },
+        { id: 57, texto: "Se mece, se balancea, o se retuerce al estar sentado/a.", categoria: "bal", inverso: false },
+        { id: 58, texto: "Bajar las escaleras o bajar de los cerros le da miedo.", categoria: "bal", inverso: false },
+        { id: 59, texto: "Se desploma hacia adelante, se echa hacia atrás, o se sujeta la cabeza con las manos mientras está sentado/a.", categoria: "bal", inverso: false },
+        { id: 60, texto: "No mantiene bien el equilibrio.", categoria: "bal", inverso: false },
+        { id: 61, texto: "Tiene dificultad para planear como cargar varias cosas al mismo tiempo.", categoria: "pln", inverso: false },
+        { id: 62, texto: "Se confunde cuando está tratando de guardar sus pertenencias o materiales en su lugar correcto.", categoria: "pln", inverso: false },
+        { id: 63, texto: "No termina las tareas que requieren varios pasos.", categoria: "pln", inverso: false },
+        { id: 64, texto: "Tiene dificultad imitando movimientos, sonidos, o expresiones correctamente.", categoria: "pln", inverso: false },
+        { id: 65, texto: "Tiene dificultad para copiar lo que hace un adulto u otro niño al construir con bloques.", categoria: "pln", inverso: false },
+        { id: 66, texto: "Tiene problemas en generar nuevas ideas durante el juego.", categoria: "pln", inverso: false },
+        { id: 67, texto: "Repite actividades familiares una y otra vez en vez de probar actividades nuevas.", categoria: "pln", inverso: false },
+        { id: 68, texto: "No calcula el tiempo bien al patear o agarrar una pelota.", categoria: "pln", inverso: false },
+        { id: 69, texto: "Tiene dificultad copiando un modelo completo correctamente para crear uno idéntico.", categoria: "pln", inverso: false },
+        { id: 70, texto: "Tiene dificultad con tareas que requieren coordinación de las dos manos como para abrir un envase.", categoria: "pln", inverso: false },
+        { id: 71, texto: "Colabora con sus amigos cuando juega con ellos.", categoria: "soc", inverso: true },
+        { id: 72, texto: "Comparte las cosas cuando se lo piden.", categoria: "soc", inverso: true },
+        { id: 73, texto: "Espera su turno.", categoria: "soc", inverso: true },
+        { id: 74, texto: "Se une al juego con otros sin alterar lo que está transcurriendo.", categoria: "soc", inverso: true },
+        { id: 75, texto: "Participa de manera apropiada en reuniones y salidas con la familia.", categoria: "soc", inverso: true },
+        { id: 76, texto: "Coopera con miembros de la familia mientras hacen recados.", categoria: "soc", inverso: true },
+        { id: 77, texto: "Mantiene contacto visual apropiado al conversar.", categoria: "soc", inverso: true },
+        { id: 78, texto: "Entabla nuevas actividades sin problema.", categoria: "soc", inverso: true },
+        { id: 79, texto: "Es flexible cuando su rutina cambia.", categoria: "soc", inverso: true },
+        { id: 80, texto: "Colabora con otros en una tarea común como haciendo la limpieza.", categoria: "soc", inverso: true }
+    ];
+
+    // ==========================================
+    // 2. BAREMOS Y RANGOS EXACTOS
+    // ==========================================
+
+    // Baremos matemáticos exactos (Niños 5-12 Home Form) extraídos del PDF
+    const baremos_Child_Home = {
+        "vis": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 22 }, "Dificultades Severas": { min: 23, max: 40 } },
+        "hea": { "Típico": { min: 10, max: 15 }, "Dificultades Moderadas": { min: 16, max: 24 }, "Dificultades Severas": { min: 25, max: 40 } },
+        "tou": { "Típico": { min: 10, max: 16 }, "Dificultades Moderadas": { min: 17, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
+        "ts":  { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
+        "bod": { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 23 }, "Dificultades Severas": { min: 24, max: 40 } },
+        "bal": { "Típico": { min: 10, max: 14 }, "Dificultades Moderadas": { min: 15, max: 20 }, "Dificultades Severas": { min: 21, max: 40 } },
+        "pln": { "Típico": { min: 10, max: 17 }, "Dificultades Moderadas": { min: 18, max: 25 }, "Dificultades Severas": { min: 26, max: 40 } },
+        "soc": { "Típico": { min: 10, max: 22 }, "Dificultades Moderadas": { min: 23, max: 29 }, "Dificultades Severas": { min: 30, max: 40 } },
+        "st":  { "Típico": { min: 60, max: 90 }, "Dificultades Moderadas": { min: 91, max: 125 }, "Dificultades Severas": { min: 126, max: 240 } }
+    };
+
+    // Baremos temporales para Preescolar (Misma lógica, actualizaremos los números luego)
+    let baremos_Activos = baremos_Child_Home; 
+    let titulo_PDF_Activo = "";
+
+    // ==========================================
+    // 3. LÓGICA DE INTERFAZ
+    // ==========================================
+    
     document.getElementById('fechaEvaluacion').valueAsDate = new Date();
 
     function calcularEdadExacta() {
@@ -235,17 +337,23 @@
     }
 
     function iniciarEvaluacion() {
-        const perfil = document.getElementById('tipoPerfil').value;
+        const perfilSeleccionado = document.getElementById('tipoPerfil').value;
         const nombre = document.getElementById('nombre').value;
-        if(!perfil || !nombre) { alert("Por favor, completa el nombre y selecciona un perfil."); return; }
+        if(!perfilSeleccionado || !nombre) { alert("Por favor, completa el nombre y selecciona un perfil."); return; }
         
-        if (perfil === 'spm_hogar') {
-            document.getElementById('pantalla-inicio').style.display = 'none';
-            document.getElementById('pantalla-cuestionario').style.display = 'block';
-            document.getElementById('titulo-cuestionario').innerText = "SPM - Cuestionario Hogar";
-            cargarCuestionarioSPM();
-        } else {
-            alert("Este cuestionario está en construcción. Prueba el SPM.");
+        document.getElementById('pantalla-inicio').style.display = 'none';
+        document.getElementById('pantalla-cuestionario').style.display = 'block';
+
+        if (perfilSeleccionado === 'spm_child_home') {
+            document.getElementById('titulo-cuestionario').innerText = "SPM-2: Home Form (Niños 5-12)";
+            baremos_Activos = baremos_Child_Home; // Asignamos los baremos exactos
+            titulo_PDF_Activo = "REPORTE SPM-2 (HOME FORM 5-12 AÑOS)";
+            cargarCuestionario(preguntas_Child_Home);
+        } else if (perfilSeleccionado === 'spm_preschool_home') {
+            document.getElementById('titulo-cuestionario').innerText = "SPM-2: Home Form (Preescolar 2-5)";
+            baremos_Activos = baremos_Child_Home; // NOTA: temporalmente usa los de niño hasta que hagamos el prompt 4
+            titulo_PDF_Activo = "REPORTE SPM-2 (HOME FORM 2-5 AÑOS)";
+            cargarCuestionario(preguntas_Preschool_Home);
         }
     }
 
@@ -254,11 +362,11 @@
         document.getElementById('pantalla-cuestionario').style.display = 'none';
     }
 
-    function cargarCuestionarioSPM() {
+    function cargarCuestionario(baseDeDatos) {
         const contenedor = document.getElementById('contenedorCuestionario');
         contenedor.innerHTML = ''; 
         
-        preguntasSPM.forEach(pregunta => {
+        baseDeDatos.forEach(pregunta => {
             let etiqueta = pregunta.inverso ? `<span class="etiqueta-inversa">Puntaje Inverso</span>` : '';
             
             const html = `
@@ -277,13 +385,13 @@
         });
     }
 
-    // --- 3. MOTOR DE CÁLCULO SPM Y PDF ---
+    // ==========================================
+    // 4. MOTOR DE CÁLCULO Y GENERADOR PDF
+    // ==========================================
 
     function calcularYGenerarPDF_SPM() {
         const respuestas = document.querySelectorAll('.respuesta-evaluacion');
         let todasRespondidas = true;
-        
-        // Alcancías para sumar los puntos
         let puntajes = { "vis": 0, "hea": 0, "tou": 0, "ts": 0, "bod": 0, "bal": 0, "pln": 0, "soc": 0 }; 
 
         respuestas.forEach(select => {
@@ -294,9 +402,7 @@
                 let esInverso = select.getAttribute('data-inverso') === "true";
                 let categoria = select.getAttribute('data-categoria');
 
-                // Lógica Inversa SPM
                 if (esInverso) { valor = 5 - valor; }
-
                 puntajes[categoria] += valor;
             }
         });
@@ -306,22 +412,18 @@
             return;
         }
 
-        // Calcular el Total Sensorial (ST) = Suma de Visión, Audición, Tacto, Gusto/Olfato, Cuerpo y Equilibrio.
-        // OJO: No incluye Planificación (pln) ni Social (soc).
         puntajes["st"] = puntajes.vis + puntajes.hea + puntajes.tou + puntajes.ts + puntajes.bod + puntajes.bal;
-
-        // Generar el PDF con los resultados
         generarReporteSPM(puntajes);
     }
 
     function obtenerClasificacionSPM(categoria, puntaje) {
-        const rangos = baremosSPM[categoria];
+        const rangos = baremos_Activos[categoria]; // Usa los baremos del perfil seleccionado
         for (let clasificacion in rangos) {
             if (puntaje >= rangos[clasificacion].min && puntaje <= rangos[clasificacion].max) {
                 return clasificacion;
             }
         }
-        return "Revisar Manual"; // Por si algún puntaje se sale de lo programado
+        return "Revisar Manual"; 
     }
 
     function generarReporteSPM(puntajes) {
@@ -333,23 +435,21 @@
         const fecha = document.getElementById('fechaEvaluacion').value;
 
         // Diseño del Encabezado
-        doc.setFillColor(34, 166, 179); // Verdeazulado clínico
+        doc.setFillColor(34, 166, 179); 
         doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.text("REPORTE SPM (HOGAR 5-12 AÑOS)", 15, 20);
+        doc.setFontSize(20);
+        doc.text(titulo_PDF_Activo, 15, 20);
         
         doc.setFontSize(11);
         doc.text(`Nombre: ${nombre}`, 15, 30);
         doc.text(`Edad: ${edadTexto}`, 15, 36);
-        doc.text(`Fecha: ${fecha}`, 120, 30);
+        doc.text(`Fecha: ${fecha}`, 130, 30);
 
-        // Título de la tabla
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
         doc.text("Resultados por Escala Sensorial", 15, 55);
 
-        // Estructuramos los datos para la tabla de forma automática
         const datosTabla = [
             ["Participación Social (SOC)", puntajes.soc, obtenerClasificacionSPM("soc", puntajes.soc)],
             ["Visión (VIS)", puntajes.vis, obtenerClasificacionSPM("vis", puntajes.vis)],
@@ -359,10 +459,9 @@
             ["Conciencia Corporal (BOD)", puntajes.bod, obtenerClasificacionSPM("bod", puntajes.bod)],
             ["Equilibrio y Movimiento (BAL)", puntajes.bal, obtenerClasificacionSPM("bal", puntajes.bal)],
             ["Planificación e Ideas (PLN)", puntajes.pln, obtenerClasificacionSPM("pln", puntajes.pln)],
-            ["TOTAL SENSORIAL (ST)", puntajes.st, obtenerClasificacionSPM("st", puntajes.st)] // Esta fila la destacaremos
+            ["TOTAL SENSORIAL (ST)", puntajes.st, obtenerClasificacionSPM("st", puntajes.st)]
         ];
 
-        // Dibujamos la tabla con AutoTable
         doc.autoTable({
             startY: 60,
             head: [['Escala', 'Puntaje Directo', 'Clasificación']],
@@ -370,22 +469,19 @@
             theme: 'striped',
             headStyles: { fillColor: [34, 166, 179] },
             didParseCell: function(data) {
-                // Si la fila es el "Total Sensorial", la ponemos en negrita para resaltarla
                 if (data.row.index === 8) {
                     data.cell.styles.fontStyle = 'bold';
                     data.cell.styles.fillColor = [240, 240, 240];
                 }
-                // Damos color al texto según la clasificación (Semáforo)
                 if (data.column.index === 2 && data.row.index !== 8) { 
-                    if (data.cell.raw === "Típico") data.cell.styles.textColor = [46, 204, 113]; // Verde
-                    if (data.cell.raw === "Dificultades Moderadas") data.cell.styles.textColor = [241, 196, 15]; // Amarillo oscuro
-                    if (data.cell.raw === "Dificultades Severas") data.cell.styles.textColor = [231, 76, 60]; // Rojo
+                    if (data.cell.raw === "Típico") data.cell.styles.textColor = [46, 204, 113];
+                    if (data.cell.raw === "Dificultades Moderadas") data.cell.styles.textColor = [241, 196, 15];
+                    if (data.cell.raw === "Dificultades Severas") data.cell.styles.textColor = [231, 76, 60];
                 }
             }
         });
 
-        // Guardamos el PDF
-        doc.save(`Reporte_SPM_${nombre.replace(/ /g, "_")}.pdf`);
+        doc.save(`Reporte_SPM2_${nombre.replace(/ /g, "_")}.pdf`);
     }
 </script>
 
