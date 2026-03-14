@@ -532,11 +532,11 @@
         contenedor.innerHTML = ''; 
         
         baseDeDatos.forEach(pregunta => {
-            let etiqueta = pregunta.inverso ? `<span class="etiqueta-inversa">Puntaje Inverso</span>` : '';
-            
+            // Eliminamos la variable "etiqueta" para que no aparezca el cartel visual, 
+            // pero mantenemos el data-inverso oculto en el select para que el motor siga calculando bien.
             const html = `
                 <div class="item-pregunta">
-                    <p>${pregunta.id}. ${pregunta.texto} ${etiqueta}</p>
+                    <p>${pregunta.id}. ${pregunta.texto}</p>
                     <select class="respuesta-evaluacion" data-categoria="${pregunta.categoria}" data-inverso="${pregunta.inverso}">
                         <option value="" disabled selected>Selecciona una frecuencia...</option>
                         <option value="4">Siempre (4)</option>
