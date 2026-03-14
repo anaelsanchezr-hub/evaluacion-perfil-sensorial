@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software P.S. 2 - Profesional</title>
+    <title>Software Evaluaciones Sensoriales</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        /* Diseño General */
         body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #f8f6fb 0%, #e8e2f4 100%); color: #332a5c; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 40px 20px; box-sizing: border-box; }
         .card { background: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(90, 75, 129, 0.08); width: 100%; max-width: 700px; margin-bottom: 20px; }
         .header-app { text-align: center; margin-bottom: 30px; }
@@ -24,15 +23,14 @@
         input:focus, select:focus { border-color: #8c7ae6; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(140, 122, 230, 0.15); outline: none; }
         .edad-calculada { font-size: 13px; color: #8c7ae6; background: #f0ecfa; padding: 10px 15px; border-radius: 8px; margin-top: -10px; margin-bottom: 20px; font-weight: 600; display: inline-block; }
         
-        /* Botones */
         .btn-principal { background: linear-gradient(135deg, #6c5ce7 0%, #5a4b81 100%); color: white; border: none; padding: 16px 24px; font-size: 16px; border-radius: 30px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 20px; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.25); transition: transform 0.2s; }
         .btn-principal:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(108, 92, 231, 0.35); }
         .btn-secundario { background: #e8e2f4; color: #5a4b81; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
         
-        /* Cuestionario */
-        #pantalla-cuestionario { display: none; } /* Oculto al inicio */
+        #pantalla-cuestionario { display: none; } 
         .item-pregunta { background: #fdfcff; margin-bottom: 20px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; }
         .item-pregunta p { margin: 0 0 15px 0; font-weight: 500; font-size: 15px; }
+        .etiqueta-inversa { font-size: 11px; background: #ffeaa7; color: #d63031; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -40,7 +38,7 @@
     <div class="card" id="pantalla-inicio">
         <div class="header-app">
             <h2>Nueva Evaluación</h2>
-            <p>Software de calificación automatizada - P.S. 2</p>
+            <p>Software de calificación automatizada - Múltiples Perfiles</p>
         </div>
 
         <form id="formInicio">
@@ -81,10 +79,8 @@
                 <label>Selecciona el Perfil a evaluar</label>
                 <select id="tipoPerfil" required>
                     <option value="" disabled selected>Elige el cuestionario correspondiente...</option>
-                    <option value="bebe">👶 Perfil Bebé (0 a 6 meses)</option>
-                    <option value="infante">🍼 Perfil Infante (7 a 35 meses)</option>
-                    <option value="escolar">🎒 Perfil Escolar (3 a 14 años)</option>
-                    <option value="adulto">🧑 Perfil Adulto (15+ años)</option>
+                    <option value="spm_hogar">🏠 SPM - Formulario Hogar</option>
+                    <option value="escolar">🎒 Perfil Sensorial 2 - Escolar (Próximamente)</option>
                 </select>
             </div>
 
@@ -101,42 +97,38 @@
         
         <div id="contenedorCuestionario"></div>
         
-        <button type="button" class="btn-principal" onclick="calcularYGenerarPDF()">Generar Reporte PDF</button>
+        <button type="button" class="btn-principal" onclick="calcularYGenerarPDF_SPM()">Generar Reporte PDF (SPM)</button>
     </div>
 
 <script>
-    // --- 1. BASES DE DATOS LÓGICAS (PERFIL ESCOLAR COMO EJEMPLO) ---
+    // --- 1. BASE DE DATOS LÓGICA SPM ---
 
-    // Textos para el PDF
-    const textosPerfilEscolar = {
-        busqueda: {
-            "como_los_demas": "Presenta patrones de búsqueda sensorial dentro de lo esperado para su edad. Explora y participa en actividades nuevas sin que su nivel de búsqueda interfiera significativamente en su vida diaria.",
-            "mas_que_los_demas": "Busca estímulos con más frecuencia de lo esperado. Puede distraerse fácilmente, cambiar de actividad con rapidez o mostrar conductas de búsqueda constantes.",
-            "mucho_mas_que_los_demas": "Manifiesta una búsqueda sensorial intensa y casi constante. Esto puede provocar dificultades para mantener la atención en tareas académicas, interferir en la dinámica del aula y generar conductas disruptivas."
+    // Baremos de ejemplo para el SPM (Categorías: Típico, Problema, Disfunción)
+    const baremosSPM = {
+        "soc": { 
+            "Desempeño Típico": { min: 0, max: 15 },
+            "Algún Problema": { min: 16, max: 20 },
+            "Disfunción Evidente": { min: 21, max: 50 } 
+        },
+        "vis": {
+            "Desempeño Típico": { min: 0, max: 10 },
+            "Algún Problema": { min: 11, max: 15 },
+            "Disfunción Evidente": { min: 16, max: 50 }
         }
     };
 
-    // Baremos (Rangos de clasificación)
-    const baremosEscolar = {
-        "busqueda": {
-            "como_los_demas": { min: 0, max: 60 },
-            "mas_que_los_demas": { min: 61, max: 82 },
-            "mucho_mas_que_los_demas": { min: 83, max: 200 } 
-        }
-    };
-
-    // Preguntas
-    const preguntasEscolar = [
-        { id: 1, texto: "Busca todo tipo de movimiento y esto interfiere con sus rutinas diarias.", cuadrante: "busqueda" },
-        { id: 2, texto: "Toca a las personas o los objetos constantemente.", cuadrante: "busqueda" },
-        { id: 3, texto: "Le encanta generar ruidos y sonidos fuertes.", cuadrante: "busqueda" }
+    // Preguntas de prueba SPM (Nota la variable 'inverso')
+    const preguntasSPM = [
+        { id: 1, texto: "Participa apropiadamente en juegos y actividades con familiares y amigos.", categoria: "soc", inverso: true }, // Pregunta positiva = inverso
+        { id: 2, texto: "Se frustra fácilmente al compartir juguetes o materiales.", categoria: "soc", inverso: false }, // Pregunta negativa = normal
+        { id: 16, texto: "Muestra angustia ante luces brillantes (ej. luz del sol).", categoria: "vis", inverso: false }
     ];
 
     // --- 2. FUNCIONES DE INTERFAZ ---
-
     document.getElementById('fechaEvaluacion').valueAsDate = new Date();
 
     function calcularEdadExacta() {
+        // (La misma lógica matemática de siempre para calcular la edad)
         const nacStr = document.getElementById('fechaNacimiento').value;
         const evalStr = document.getElementById('fechaEvaluacion').value;
         if(!nacStr || !evalStr) return;
@@ -157,21 +149,13 @@
         const nombre = document.getElementById('nombre').value;
         if(!perfil || !nombre) { alert("Por favor, completa el nombre y selecciona un perfil."); return; }
         
-        // Caminos según el perfil seleccionado
-        if (perfil === 'escolar') {
+        if (perfil === 'spm_hogar') {
             document.getElementById('pantalla-inicio').style.display = 'none';
             document.getElementById('pantalla-cuestionario').style.display = 'block';
-            document.getElementById('titulo-cuestionario').innerText = "Cuestionario Escolar";
-            cargarCuestionarioEscolar();
-        } 
-        else if (perfil === 'bebe') {
-            alert("Has seleccionado el Perfil Bebé. (Pronto agregaremos sus preguntas y lógica).");
-        }
-        else if (perfil === 'infante') {
-            alert("Has seleccionado el Perfil Infante. (Pronto agregaremos sus preguntas y lógica).");
-        }
-        else if (perfil === 'adulto') {
-            alert("Has seleccionado el Perfil Adulto. (Pronto agregaremos sus preguntas y lógica).");
+            document.getElementById('titulo-cuestionario').innerText = "SPM - Cuestionario Hogar";
+            cargarCuestionarioSPM();
+        } else {
+            alert("Este cuestionario está en construcción. Prueba el SPM.");
         }
     }
 
@@ -180,19 +164,23 @@
         document.getElementById('pantalla-cuestionario').style.display = 'none';
     }
 
-    function cargarCuestionarioEscolar() {
+    function cargarCuestionarioSPM() {
         const contenedor = document.getElementById('contenedorCuestionario');
         contenedor.innerHTML = ''; 
         
-        preguntasEscolar.forEach(pregunta => {
+        // Renderizamos las preguntas del SPM con escala de 4 puntos
+        preguntasSPM.forEach(pregunta => {
+            let etiqueta = pregunta.inverso ? `<span class="etiqueta-inversa">Puntaje Inverso</span>` : '';
+            
             const html = `
                 <div class="item-pregunta">
-                    <p>${pregunta.id}. ${pregunta.texto}</p>
-                    <select class="respuesta-evaluacion" data-cuadrante="${pregunta.cuadrante}">
+                    <p>${pregunta.id}. ${pregunta.texto} ${etiqueta}</p>
+                    <select class="respuesta-evaluacion" data-categoria="${pregunta.categoria}" data-inverso="${pregunta.inverso}">
                         <option value="" disabled selected>Selecciona una frecuencia...</option>
-                        <option value="50">Siempre (Puntaje de prueba alto)</option>
-                        <option value="30">Frecuentemente (Puntaje de prueba medio)</option>
-                        <option value="10">Casi nunca (Puntaje de prueba bajo)</option>
+                        <option value="4">Siempre (4)</option>
+                        <option value="3">Frecuentemente (3)</option>
+                        <option value="2">Ocasionalmente (2)</option>
+                        <option value="1">Nunca (1)</option>
                     </select>
                 </div>
             `;
@@ -200,17 +188,29 @@
         });
     }
 
-    // --- 3. MOTOR DE CÁLCULO Y PDF ---
+    // --- 3. MOTOR DE CÁLCULO SPM Y PDF ---
 
-    function calcularYGenerarPDF() {
+    function calcularYGenerarPDF_SPM() {
         const respuestas = document.querySelectorAll('.respuesta-evaluacion');
         let todasRespondidas = true;
-        let puntajeBusqueda = 0;
+        
+        // Alcancías para sumar los puntos del SPM
+        let puntajes = { "soc": 0, "vis": 0 }; 
 
         respuestas.forEach(select => {
-            if (select.value === "") todasRespondidas = false;
-            else if (select.getAttribute('data-cuadrante') === 'busqueda') {
-                puntajeBusqueda += parseInt(select.value);
+            if (select.value === "") {
+                todasRespondidas = false;
+            } else {
+                let valor = parseInt(select.value);
+                let esInverso = select.getAttribute('data-inverso') === "true";
+                let categoria = select.getAttribute('data-categoria');
+
+                // LA MAGIA MATEMÁTICA DEL PUNTAJE INVERSO
+                if (esInverso) {
+                    valor = 5 - valor; // Si elige 4 (Siempre), se convierte en 1. Si elige 1 (Nunca), se convierte en 4.
+                }
+
+                puntajes[categoria] += valor;
             }
         });
 
@@ -219,71 +219,65 @@
             return;
         }
 
-        let clasificacion = "como_los_demas"; 
-        const rangosBusqueda = baremosEscolar.busqueda;
-        
-        for (let clave in rangosBusqueda) {
-            if (puntajeBusqueda >= rangosBusqueda[clave].min && puntajeBusqueda <= rangosBusqueda[clave].max) {
-                clasificacion = clave;
-            }
-        }
+        // Clasificar los resultados
+        let clasificacionSOC = obtenerClasificacionSPM("soc", puntajes.soc);
+        let clasificacionVIS = obtenerClasificacionSPM("vis", puntajes.vis);
 
-        generarReporte(puntajeBusqueda, clasificacion);
+        generarReporteSPM(puntajes, clasificacionSOC, clasificacionVIS);
     }
 
-    function generarReporte(puntaje, clasificacion) {
+    function obtenerClasificacionSPM(categoria, puntaje) {
+        const rangos = baremosSPM[categoria];
+        for (let clasificacion in rangos) {
+            if (puntaje >= rangos[clasificacion].min && puntaje <= rangos[clasificacion].max) {
+                return clasificacion;
+            }
+        }
+        return "Fuera de rango";
+    }
+
+    function generarReporteSPM(puntajes, classSOC, classVIS) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
         const nombre = document.getElementById('nombre').value;
         const edadTexto = document.getElementById('textoEdad').innerText.replace("Edad exacta: ", "");
         const fecha = document.getElementById('fechaEvaluacion').value;
-        const sexo = document.getElementById('sexo').value;
 
         // Encabezado
-        doc.setFillColor(90, 75, 129);
+        doc.setFillColor(34, 166, 179); // Color verdeazulado para el SPM
         doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(22);
-        doc.text("PERFIL SENSORIAL 2", 15, 20);
+        doc.text("REPORTE SPM (HOGAR)", 15, 20);
         
         doc.setFontSize(11);
         doc.text(`Nombre: ${nombre}`, 15, 30);
         doc.text(`Edad: ${edadTexto}`, 15, 36);
         doc.text(`Fecha: ${fecha}`, 120, 30);
-        doc.text(`Sexo: ${sexo}`, 120, 36);
 
-        // Tabla de Resultados
-        doc.setTextColor(51, 42, 92);
+        // Tabla de Resultados SPM
+        doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
-        doc.text("Resultados del Cuadrante", 15, 50);
-
-        const textoClasificacionAmigable = clasificacion.replace(/_/g, " ").toUpperCase();
+        doc.text("Resultados por Escala", 15, 50);
 
         doc.autoTable({
             startY: 55,
-            head: [['Cuadrante', 'Puntaje Directo', 'Clasificación']],
-            body: [["Búsqueda / Buscador", puntaje, textoClasificacionAmigable]],
+            head: [['Escala', 'Puntaje Directo', 'Clasificación']],
+            body: [
+                ["Participación Social (SOC)", puntajes.soc, classSOC],
+                ["Visión (VIS)", puntajes.vis, classVIS]
+            ],
             theme: 'striped',
-            headStyles: { fillColor: [140, 122, 230] }
+            headStyles: { fillColor: [104, 109, 224] } // Morado azulado
         });
 
-        // Párrafo Interpretativo
-        let alturaActual = doc.lastAutoTable.finalY + 15;
-        doc.setFontSize(14);
-        doc.text("Interpretación Clínica", 15, alturaActual);
-        
-        doc.setFontSize(11);
-        doc.setTextColor(80, 80, 80);
-        
-        let textoParrafo = textosPerfilEscolar.busqueda[clasificacion];
-        let textoAjustado = doc.splitTextToSize(`Búsqueda: ${textoParrafo}`, 180);
-        
-        doc.text(textoAjustado, 15, alturaActual + 10);
-
-        doc.save(`Reporte_PS2_${nombre.replace(/ /g, "_")}.pdf`);
+        doc.save(`Reporte_SPM_${nombre.replace(/ /g, "_")}.pdf`);
     }
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
